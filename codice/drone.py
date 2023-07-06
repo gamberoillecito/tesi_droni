@@ -1,6 +1,7 @@
 from loguru import logger
 from mavsdk import System
 import asyncio
+import random
 
 async def print_status_text(drone):
     try:
@@ -8,15 +9,35 @@ async def print_status_text(drone):
             print(f"Status: {status_text.type}: {status_text.text}")
     except asyncio.CancelledError:
         return
-        
-@logger.catch
+
 class Drone:
-    def __init__(self, sys_port, sys_addr) -> None:
+    def __init__(self,  sys_addr) -> None:
         self.sys_addr = sys_addr
-        self.sys_port = sys_port
-        self.__drone = System(port=self.sys_port)
+        # self.sys_port = sys_port
+        self.sys_port = random.randint(1000, 65535)
+        # self.__drone = System(port=self.sys_port)
+        self.__drone = System(port= self.sys_port)
+        self.neighbours = []
+        self.__drone.component_information.float_param
+        
     
-    async def connect(self):
+
+    async def add_neighbour(self, neigh_addr):
+        neigh = Drone(neigh_addr)
+        logger.debug('aggiungo drone')
+        await neigh.connect()
+        logger.debug('drone aggiunto')
+        self.neighbours.append(neigh)
+
+    async def test_neighbour_altitude(self):
+        d0 = self.neighbours[0]
+        logger.debug('inizio stampa altezza')
+        async for pos in d0.__drone.telemetry.position():
+            print(pos.absolute_altitude_m)
+            await asyncio.sleep(1)
+
+
+    async def connect(self) -> None:
         # await drone.connect()
         await self.__drone.connect(system_address=f"udp://:{self.sys_addr}")
 
@@ -35,6 +56,10 @@ class Drone:
                 break
 
         status_text_task.cancel()
+    
+    def altitude(self) -> int:
+        pos = self.__drone.telemetry.position()
+        return pos.absolute_altitude_m
     
     async def arm(self):
         logger.debug("Arming")

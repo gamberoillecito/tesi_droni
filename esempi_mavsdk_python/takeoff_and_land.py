@@ -8,7 +8,7 @@ async def run():
 
     drone = System()
     # await drone.connect()
-    await drone.connect(system_address="udp://:14540")
+    await drone.connect(system_address="udp://:14540") #indirizzo della flight board (corrisponde alla porta seriale)
 
     status_text_task = asyncio.ensure_future(print_status_text(drone))
 

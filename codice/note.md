@@ -1,0 +1,2 @@
+- prima di mettere offboard devo iniziare a mandare le coordinate di quello che voglio che faccia sennò lui una volta entrato in modalità offboard non sa che fare
+- 
