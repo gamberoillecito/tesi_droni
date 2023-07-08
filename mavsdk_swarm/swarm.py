@@ -38,7 +38,7 @@ class Swarm:
                 self.drones_addrs.append(self.next_drone_address)
                 self.next_drone_address += 1
         elif drones_number != len(drones_addrs):
-            raise ValueError; "Il numero di droni indicato non corrisponde all'array fornito"
+            raise ValueError; "The number of drones specified does not match with the list size"
         else:
             self.drones_addrs = drones_addrs
         logger.info(f"Creating swarm with {self.drones_number} drones at {self.drones_addrs}")
@@ -64,7 +64,7 @@ class Swarm:
             await d.action.land()
 
     @property
-    async def positions(self) -> List[List[DronePosition]]:
+    async def positions(self) -> List[DronePosition]:
         self.__positions = []
         for d in self.drones:
             p = await anext(d.telemetry.position())
@@ -82,12 +82,11 @@ class Swarm:
     # async def do_for_all(self, function:Callable):
     #     for d in self.drones:
     #         function(d)
-    async def set_positions(self, target_positions:List[List[float]]):
-        positions = await self.positions
+    async def set_positions(self, target_positions:List[DronePosition]):
         for n, d in enumerate(self.drones):
-            pos = positions[n]
-            logger.debug("vado in posizione")
-            await d.action.goto_location(pos.latitude_deg+1, pos.longitude_deg+1, pos.absolute_altitude_m + 1, 0)
+            pos = target_positions[n]
+            logger.info(f"Moving drone {self.drones_addrs[n]} to {pos}")
+            await d.action.goto_location(*pos.to_goto_location())
     async def do_for_all(self, function:Callable):
         for d in self.drones:
             function(d)
@@ -103,7 +102,11 @@ async def main():
     await sw.takeoff()
     print_pos(await sw.positions)
     await asyncio.sleep(10)
-    await sw.set_positions([[2.0], [1.0]])
+    pos = await sw.positions
+    for n, p in enumerate(pos):
+        n += 1
+        p.increment_m(2*n, 2*n, 2*n)
+    await sw.set_positions(pos)
     await asyncio.sleep(10)
     await sw.land()
     print_pos(await sw.positions)
