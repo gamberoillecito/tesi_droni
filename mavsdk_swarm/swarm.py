@@ -1,4 +1,5 @@
 from loguru import logger
+from mavsdk import System
 import asyncio
 from typing import List, Callable
 from systemwrapper import SystemWrapper
@@ -24,6 +25,7 @@ class Swarm:
             di indirizzi specificati
         '''                
         self.drones_number = drones_number
+        self.__positions = []
         # se non viene passata una lista di indirizzi vengono usati quelli di 
         # default a partire da next_drone_address
         if drones_addrs == None:
@@ -39,7 +41,7 @@ class Swarm:
 
 
     async def connect(self):
-        self.drones = []
+        self.drones:List[System] = []
         logger.info("Connecting to drones...")
         for a in self.drones_addrs:
             logger.info(f"Connecting to drone at {a}")
@@ -59,8 +61,19 @@ class Swarm:
         for d in self.drones:
             await d.action.land()
 
+    @property
     async def positions(self):
-        pass
+        p = await anext(self.drones[0].telemetry.position())
+        print(p)
+        # try:
+        #     async for pos in self.drones[0].telemetry.position():
+        #         print(pos)
+        # except asyncio.CancelledError:
+        #     return 0
+        # self.__positions = []
+        # # for n,d in enumerate(self.drones):
+        # #     self.__positions.append(d.telemetry.position())
+        # # return self.__positions
 
     async def do_for_all(self, function:Callable):
         for d in self.drones:
@@ -69,6 +82,10 @@ class Swarm:
 async def main():
     sw = Swarm(2)
     await sw.connect()
+    # for p in sw.positions:
+    #     async for i in p:
+    #         print(p)
+    await sw.positions
     await sw.takeoff()
     await asyncio.sleep(10)
     await sw.land()
