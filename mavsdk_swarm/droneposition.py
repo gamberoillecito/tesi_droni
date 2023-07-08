@@ -27,16 +27,27 @@ class DronePosition:
     def __init__(self,
                  latitude_deg:float,
                  longitude_deg:float,
+                 absolute_altitude_m:float,
                  relative_altitude_m:float) -> None:
         self.latitude_deg = latitude_deg
         self.longitude_deg = longitude_deg
+        self.absolute_altitude_m = absolute_altitude_m
         self.relative_altitude_m = relative_altitude_m
     
     @classmethod
-    def from_mavsdk_position(self, pos:telemetry.Position) -> None:
-        self.latitude_deg = pos.latitude_deg
-        self.longitude_deg = pos.longitude_deg
-        self.relative_altitude_m = pos.relative_altitude_m
+    def from_mavsdk_position(cls, pos:telemetry.Position) -> None:
+        return cls(pos.latitude_deg, pos.longitude_deg, pos.relative_altitude_m, pos.absolute_altitude_m)
+
+    def __str__(self):
+        return '%s(%s)' % (
+            type(self).__name__,
+            ', '.join('%s=%s' % item for item in vars(self).items())
+        )
+    
+    # goto_location(latitude_deg, longitude_deg, absolute_altitude_m, yaw_deg)
+    def to_goto_location(self) -> List[float]:
+        # TODO trovare il modo di calcolare il parametro yaw, per ora è impostato sempre a 0
+        return (self.latitude_deg, self.longitude_deg, self.relative_altitude_m, 0)
 
     def increment_m(self, lat_increment_m, long_increment_m, alt_increment_m):
         # TODO: questo metodo di convertire metri in gradi non è molto accurato
