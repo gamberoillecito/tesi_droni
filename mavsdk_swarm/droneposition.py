@@ -1,7 +1,7 @@
 
 from mavsdk import telemetry
 from typing import List
-from math import sqrt
+import math
 # rappresentazione di default = []
 # http://mavsdk-python-docs.s3-website.eu-central-1.amazonaws.com/plugins/telemetry.html#mavsdk.telemetry.Position
 # http://mavsdk-python-docs.s3-website.eu-central-1.amazonaws.com/plugins/telemetry.html#mavsdk.telemetry.PositionBody
@@ -45,9 +45,16 @@ class DronePosition:
         )
     
     # goto_location(latitude_deg, longitude_deg, absolute_altitude_m, yaw_deg)
-    def to_goto_location(self) -> List[float]:
-        # TODO trovare il modo di calcolare il parametro yaw, per ora è impostato sempre a 0
-        return (self.latitude_deg, self.longitude_deg, self.relative_altitude_m, 0)
+    def to_goto_location(self, prev_pos:'DronePosition'=None) -> List[float]:
+        if prev_pos == None:
+            yaw = 0
+        else:
+            # ATTENZIONE: i calcoli fatti qui sono solo un'approssimazione
+            d_lat = self.latitude_deg - prev_pos.latitude_deg
+            d_lon = self.longitude_deg - prev_pos.longitude_deg
+            tan_angle = 90 + d_lon/d_lat
+            yaw = math.atan(tan_angle)
+        return (self.latitude_deg, self.longitude_deg, self.relative_altitude_m, yaw)
 
     def increment_m(self, lat_increment_m, long_increment_m, alt_increment_m):
         # TODO: questo metodo di convertire metri in gradi non è molto accurato

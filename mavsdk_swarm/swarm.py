@@ -11,6 +11,7 @@ class Swarm:
     # indirizzo del prossimo drone creato (incrementata dopo la creazione di ciascun drone)
     next_drone_address = 14540 
     def __init__(self,
+                target_scanner:Callable[[System], float],
                 drones_number:int,
                 drones_addrs:List[int]=None) -> None:
         '''Inizializza una flotta di drones_number droni agli indirizzi
@@ -27,6 +28,8 @@ class Swarm:
             ValueError: il numero di droni deve corrispondere al numero
             di indirizzi specificati
         '''                
+        self.target_scanner = target_scanner
+        self.__discoveries:List[float] = []
         self.drones_number = drones_number
         self.__positions = []
         self.drones:List[System] = []
@@ -83,13 +86,23 @@ class Swarm:
     #     for d in self.drones:
     #         function(d)
     async def set_positions(self, target_positions:List[DronePosition]):
+        prev_pos = await self.positions
+        print(prev_pos)
         for n, d in enumerate(self.drones):
             pos = target_positions[n]
             logger.info(f"Moving drone {self.drones_addrs[n]} to {pos}")
-            await d.action.goto_location(*pos.to_goto_location())
+            await d.action.goto_location(*pos.to_goto_location(prev_pos[n]))
     async def do_for_all(self, function:Callable):
         for d in self.drones:
             function(d)
+
+    @property
+    async def discoveries(self):
+        self.__discoveries = []
+        for d in self.drones:
+            self.__discoveries.append(self.target_scanner(d))
+
+        return self.__discoveries
 
 def print_pos(pos):
     for p in pos:
@@ -97,10 +110,11 @@ def print_pos(pos):
     print("#"*10)
 
 async def main():
-    sw = Swarm(2)
+    sw = Swarm(lambda x: 1, 2)
     await sw.connect()
     await sw.takeoff()
-    print_pos(await sw.positions)
+    print(await sw.discoveries)
+    # print_pos(await sw.positions)
     await asyncio.sleep(10)
     pos = await sw.positions
     for n, p in enumerate(pos):
@@ -109,7 +123,7 @@ async def main():
     await sw.set_positions(pos)
     await asyncio.sleep(10)
     await sw.land()
-    print_pos(await sw.positions)
+    # print_pos(await sw.positions)
 
 if __name__ == "__main__":
     asyncio.run(main())
