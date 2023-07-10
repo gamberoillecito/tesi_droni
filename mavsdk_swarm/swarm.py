@@ -8,31 +8,34 @@ from droneposition import DronePosition
 
 
 class Swarm:
+    """
+    Inizializza una flotta di drones_number droni agli indirizzi
+    specificati oppure ad indirizzi progressivi.
+
+    Args:
+        target_scanner (Callable[[System], float]): Funzione che prende
+            in ingresso un drone e restituisce un intero in [0,1] che 
+            rappresenta quanto quel drone sia vicino al target
+        drones_number (int): Numero di droni da cui è composta la flotta
+        drones_addrs (List[int], optional): Indirizzi dei droni.
+            Defaults to None.
+    Attributes:
+
+    Raises:
+        ValueError: Il numero di droni deve corrispondere al numero
+        di elementi di drone_addrs
+    """
     # indirizzo del prossimo drone creato (incrementata dopo la creazione di ciascun drone)
     next_drone_address = 14540 
     def __init__(self,
                 target_scanner:Callable[[System], float],
                 drones_number:int,
                 drones_addrs:List[int]=None) -> None:
-        '''Inizializza una flotta di drones_number droni agli indirizzi
-        specificati oppure ad indirizzi progressivi.
-
-        Arguments:
-            drones_number -- Numero di droni da cui è composta la flotta
-
-        pass
-        Keyword Arguments:
-            drones_addrs -- Indirizzi dei droni (default: {None})
-
-        Raises:
-            ValueError: il numero di droni deve corrispondere al numero
-            di indirizzi specificati
-        '''                
-        self.target_scanner = target_scanner
+        self.__target_scanner = target_scanner
         self.__discoveries:List[float] = []
-        self.drones_number = drones_number
+        self.__drones_number = drones_number
         self.__positions = []
-        self.drones:List[System] = []
+        self.__drones:List[System] = []
         # se non viene passata una lista di indirizzi vengono usati quelli di 
         # default a partire da next_drone_address
         if drones_addrs == None:
@@ -44,7 +47,7 @@ class Swarm:
             raise ValueError; "The number of drones specified does not match with the list size"
         else:
             self.drones_addrs = drones_addrs
-        logger.info(f"Creating swarm with {self.drones_number} drones at {self.drones_addrs}")
+        logger.info(f"Creating swarm with {self.__drones_number} drones at {self.drones_addrs}")
 
 
     async def connect(self):
@@ -54,52 +57,65 @@ class Swarm:
             sysW = SystemWrapper(a)
             drone = await sysW.connect()
             logger.info(f"Coonection to drone at {a} completed")
-            self.drones.append(drone)
+            self.__drones.append(drone)
 
     async def takeoff(self):
         #TODO controllare se i droni sono connessi 
-        for d in self.drones:
+        for d in self.__drones:
             await d.action.arm()
             await d.action.takeoff()
 
     async def land(self):
-        for d in self.drones:
+        for d in self.__drones:
             await d.action.land()
 
     @property
     async def positions(self) -> List[DronePosition]:
+        """
+        Restituisce una lista con le posizioni dei droni
+
+        Returns:
+            List[DronePosition]: Posizioni correnti dei singoli droni 
+        """
         self.__positions = []
-        for d in self.drones:
+        for d in self.__drones:
             p = await anext(d.telemetry.position())
             pos = DronePosition.from_mavsdk_position(p)
             self.__positions.append(pos)
 
         return self.__positions
     
-    # Non si possono fare i setter asincroni
-    # @positions.setter
-    # async def positions(self, target_positions:List[List[float]]):
-    #     for n, d in enumerate(self.drones):
-    #         pos = self.positions[n]
-    #         await d.action.goto_location(pos.latitude_deg, pos.longitude_deg, pos.absolute_altitude_m + 1, 0)
-    # async def do_for_all(self, function:Callable):
-    #     for d in self.drones:
-    #         function(d)
     async def set_positions(self, target_positions:List[DronePosition]):
+        """
+        Fa spostare i droni alle posizioni indicate in `target_positions`
+
+        Args:
+            target_positions (List[DronePosition]): Lista di posizioni a cui
+                far muovere i droni
+        """
         prev_pos = await self.positions
         print(prev_pos)
-        for n, d in enumerate(self.drones):
+        for n, d in enumerate(self.__drones):
             pos = target_positions[n]
             logger.info(f"Moving drone {self.drones_addrs[n]} to {pos}")
             await d.action.goto_location(*pos.to_goto_location(prev_pos[n]))
     async def do_for_all(self, function:Callable):
-        for d in self.drones:
+        for d in self.__drones:
             function(d)
 
     @property
-    async def discoveries(self):
+    async def discoveries(self) -> List[float]:
+        """
+        Restituisce le discovery di ciascun drone.
+
+        Una discovery è un numero compreso tra 0 e 1 che indica quanto il drone
+        sia "vicino" all'obiettivo, 1 indica che l'obiettivo è stato trovato
+
+        Returns:
+            List[float]: Lista delle discovery per ciascun drone
+        """
         self.__discoveries = []
-        for d in self.drones:
-            self.__discoveries.append(await self.target_scanner(d))
+        for d in self.__drones:
+            self.__discoveries.append(await self.__target_scanner(d))
 
         return self.__discoveries
