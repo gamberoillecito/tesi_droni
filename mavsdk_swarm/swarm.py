@@ -100,30 +100,6 @@ class Swarm:
     async def discoveries(self):
         self.__discoveries = []
         for d in self.drones:
-            self.__discoveries.append(self.target_scanner(d))
+            self.__discoveries.append(await self.target_scanner(d))
 
         return self.__discoveries
-
-def print_pos(pos):
-    for p in pos:
-        print(p)
-    print("#"*10)
-
-async def main():
-    sw = Swarm(lambda x: 1, 2)
-    await sw.connect()
-    await sw.takeoff()
-    print(await sw.discoveries)
-    # print_pos(await sw.positions)
-    await asyncio.sleep(10)
-    pos = await sw.positions
-    for n, p in enumerate(pos):
-        n += 1
-        p.increment_m(2*n, 2*n, 2*n)
-    await sw.set_positions(pos)
-    await asyncio.sleep(10)
-    await sw.land()
-    # print_pos(await sw.positions)
-
-if __name__ == "__main__":
-    asyncio.run(main())
