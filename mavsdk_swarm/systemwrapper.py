@@ -4,20 +4,22 @@ from mavsdk import System
 import random
 
 class SystemWrapper:
-    '''Nasconde parte della complessità della classe Systema di MavSDK.
-    Al momento prevede di istanziare un elemento della classe System e di
-    connetervicisi. In futuro potrebbe essere utile per sfruttare meglio
-    gli altri parametri previsti
+    """
+    Nasconde parte della complessità della classe System di MavSDK.
 
-        Attributi:
-        system_addr -- Indirizzo del remote system (il drone)
-        mav_sdk_server_addr -- Controllare documentazione mavsdk (default: {None})
-        port -- Controllare documentazione mavsdk (default: {None})
-        sysid -- Controllare documentazione mavsdk (default: {None})
-    '''
+    Permette di istanziare un elemento della classe System e di
+    connetervicisi. 
+    """
+
     @logger.catch
     def __init__(self,
                  system_addr:int) -> None:
+        """
+        Crea un System all'indirizzo specificato
+
+        Args:
+            system_addr (int): Indirizzo del System (il drone)
+        """
         self.system_addr = system_addr
         # la porta casuale è copiata da uno script, ancora devo capirne il motivo
         self.server_port = random.randint(1000, 65535)
@@ -27,13 +29,15 @@ class SystemWrapper:
     
     @logger.catch
     async def connect(self) -> System:
-        '''Effettua la connessione a un System (il drone). Per ridurre
-        la complessità, dall'esterno è accessibile solo un drone già
+        """
+        Effettua la connessione a un System (il drone).
+
+        Per ridurre la complessità, dall'esterno è accessibile solo un drone già
         connesso.
 
         Returns:
             L'istanza di System già connessa.
-        '''
+        """
         logger.debug(f"Connecting to system at {self.system_addr}")
         await self.system.connect(f"udp://:{self.system_addr}")
         async for state in self.system.core.connection_state():
