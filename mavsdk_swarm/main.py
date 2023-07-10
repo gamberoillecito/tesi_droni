@@ -10,7 +10,7 @@ VIRTUAL_TARGET = None
 async def create_virtual_target(swarm:Swarm, max_distance) -> DronePosition:
     assert max_distance > 1, "Il target non può coincidere con i droni"
     starting_pos = await swarm.positions
-    # creo un punto casuale in un cerco di raggio `max_distance` centrato 
+    # creo un punto casuale in un cerchio di raggio `max_distance` centrato 
     # nel punto di decollo dei droni
     center = starting_pos[0]
     alpha = 2 * math.pi * random.random()
@@ -27,8 +27,9 @@ async def create_virtual_target(swarm:Swarm, max_distance) -> DronePosition:
 async def target_scanner(drone) -> float:
     p = await anext(drone.telemetry.position())
     drone_pos = DronePosition.from_mavsdk_position(p)
-    distance = drone_pos.distance_m(VIRTUAL_TARGET)
-    return distance
+    distance = drone_pos.distance_2D_m(VIRTUAL_TARGET)
+    discovery = math.exp(-distance/10)
+    return discovery 
 
 def print_pos(pos):
     for p in pos:
@@ -45,14 +46,16 @@ async def main():
     # Codice temporaneo per la gestione del virtual target #
     ########################################################
     while VIRTUAL_TARGET == None:
-        VIRTUAL_TARGET = await create_virtual_target(sw, 3)
+        VIRTUAL_TARGET = await create_virtual_target(sw, 10)
     # drone che rappresenta il target (soluzione temporanea)
     logger.debug(f"Virtual Target: {VIRTUAL_TARGET}")
     target_swarm = Swarm(lambda x: 0, 1) 
     await target_swarm.connect()
     await target_swarm.takeoff()
+    await asyncio.sleep(5)
     await target_swarm.set_positions([VIRTUAL_TARGET])
     await asyncio.sleep(10)
+    await target_swarm.land()
 
     await sw.takeoff()
     disc = await sw.discoveries
