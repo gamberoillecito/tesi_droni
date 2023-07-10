@@ -59,7 +59,7 @@ class DronePosition:
         new_lat = self.latitude_deg + m_to_deg(lat_increment_m)
         new_lon = self.longitude_deg + m_to_deg(long_increment_m)
         new_alt = self.absolute_altitude_m + alt_increment_m
-        return DronePosition(new_lat, new_lon, new_alt,0)
+        return DronePosition(new_lat, new_lon, new_alt)
 
     def distance_m(self, point:'DronePosition') -> float:
         # TODO: questo metodo non è molto accurato
