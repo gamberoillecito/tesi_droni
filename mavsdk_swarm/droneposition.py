@@ -27,16 +27,14 @@ class DronePosition:
     def __init__(self,
                  latitude_deg:float,
                  longitude_deg:float,
-                 absolute_altitude_m:float,
-                 relative_altitude_m:float) -> None:
+                 absolute_altitude_m:float) -> None:
         self.latitude_deg = latitude_deg
         self.longitude_deg = longitude_deg
         self.absolute_altitude_m = absolute_altitude_m
-        self.relative_altitude_m = relative_altitude_m
     
     @classmethod
     def from_mavsdk_position(cls, pos:telemetry.Position) -> None:
-        return cls(pos.latitude_deg, pos.longitude_deg, pos.relative_altitude_m, pos.absolute_altitude_m)
+        return cls(pos.latitude_deg, pos.longitude_deg, pos.absolute_altitude_m)
 
     def __str__(self):
         return '%s(%s)' % (
@@ -54,10 +52,19 @@ class DronePosition:
             d_lon = self.longitude_deg - prev_pos.longitude_deg
             tan_angle = 90 + d_lon/d_lat
             yaw = math.atan(tan_angle)
-        return (self.latitude_deg, self.longitude_deg, self.relative_altitude_m, yaw)
+        return (self.latitude_deg, self.longitude_deg, self.absolute_altitude_m, yaw)
 
     def increment_m(self, lat_increment_m, long_increment_m, alt_increment_m):
-        # TODO: questo metodo di convertire metri in gradi non è molto accurato
-        self.latitude_deg += m_to_deg(lat_increment_m)
-        self.longitude_deg += m_to_deg(long_increment_m)
-        self.relative_altitude_m += alt_increment_m
+        # TODO: questo metodo non è molto accurato
+        new_lat = self.latitude_deg + m_to_deg(lat_increment_m)
+        new_lon = self.longitude_deg + m_to_deg(long_increment_m)
+        new_alt = self.absolute_altitude_m + alt_increment_m
+        return DronePosition(new_lat, new_lon, new_alt,0)
+
+    def distance_m(self, point:'DronePosition') -> float:
+        # TODO: questo metodo non è molto accurato
+        dx_m = deg_to_m(self.longitude_deg - point.longitude_deg)
+        dy_m = deg_to_m(self.latitude_deg - point.latitude_deg)
+        dz_m = deg_to_m(self.absolute_altitude_m - point.absolute_altitude_m)
+        distance = math.sqrt(dx_m**2 + dy_m**2 + dz_m**2)
+        return distance
