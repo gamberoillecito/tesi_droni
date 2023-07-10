@@ -38,8 +38,8 @@ class Swarm:
         if drones_addrs == None:
             self.drones_addrs = []
             for i in range(drones_number):
-                self.drones_addrs.append(self.next_drone_address)
-                self.next_drone_address += 1
+                self.drones_addrs.append(Swarm.next_drone_address)
+                Swarm.next_drone_address += 1
         elif drones_number != len(drones_addrs):
             raise ValueError; "The number of drones specified does not match with the list size"
         else:
