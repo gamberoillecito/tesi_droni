@@ -26,6 +26,8 @@ class Swarm:
         di elementi di drone_addrs
     """
     # indirizzo del prossimo drone creato (incrementata dopo la creazione di ciascun drone)
+    # la variabile è condivisa da tutte le istanze della classe così da poter
+    # creare più Swarm senza conflitti
     next_drone_address = 14540 
     def __init__(self,
                 target_scanner:Callable[[System], float],
@@ -36,6 +38,7 @@ class Swarm:
         self.__drones_number = drones_number
         self.__positions = []
         self.__drones:List[System] = []
+
         # se non viene passata una lista di indirizzi vengono usati quelli di 
         # default a partire da next_drone_address
         if drones_addrs == None:
@@ -51,23 +54,36 @@ class Swarm:
 
 
     async def connect(self):
+        """
+        Permette di connettersi a ciascun drone simultaneamente.
+        """
         logger.info("Connecting to drones...")
         for a in self.drones_addrs:
-            logger.info(f"Connecting to drone at {a}")
+            logger.info(f"Connecting to drone@{a}")
             sysW = SystemWrapper(a)
             drone = await sysW.connect()
-            logger.info(f"Coonection to drone at {a} completed")
+            logger.info(f"Coonection to drone@{a} completed")
             self.__drones.append(drone)
 
     async def takeoff(self):
+        """
+        Fa decollare tutti i droni simultaneamente.
+        """
         #TODO controllare se i droni sono connessi 
+        logger.info("Taking off")
         for d in self.__drones:
             await d.action.arm()
             await d.action.takeoff()
+        logger.info("Takeoff completed")
 
     async def land(self):
+        """
+        Fa atterrare tutti i droni simultaneamente.
+        """
+        logger.debug("Landing")
         for d in self.__drones:
             await d.action.land()
+        logger.debug("Landing completed")
 
     @property
     async def positions(self) -> List[DronePosition]:
@@ -97,8 +113,9 @@ class Swarm:
         print(prev_pos)
         for n, d in enumerate(self.__drones):
             pos = target_positions[n]
-            logger.info(f"Moving drone {self.drones_addrs[n]} to {pos}")
+            logger.info(f"Moving drone@{self.drones_addrs[n]} to {pos}")
             await d.action.goto_location(*pos.to_goto_location(prev_pos[n]))
+    
     async def do_for_all(self, function:Callable):
         for d in self.__drones:
             function(d)

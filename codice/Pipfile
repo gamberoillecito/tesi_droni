@@ -7,6 +7,7 @@ name = "pypi"
 mavsdk = "*"
 loguru = "*"
 pymavlink = "*"
+pylint = "*"
 
 [dev-packages]
 

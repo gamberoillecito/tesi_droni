@@ -1,5 +1,4 @@
 from loguru import logger
-import asyncio
 from mavsdk import System
 import random
 
@@ -38,7 +37,7 @@ class SystemWrapper:
         Returns:
             L'istanza di System già connessa.
         """
-        logger.debug(f"Connecting to system at {self.system_addr}")
+        logger.debug(f"Connecting to system@{self.system_addr}")
         await self.system.connect(f"udp://:{self.system_addr}")
         async for state in self.system.core.connection_state():
             if state.is_connected:

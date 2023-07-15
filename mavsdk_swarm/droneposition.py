@@ -2,7 +2,6 @@ from mavsdk import telemetry
 from typing import List
 import math
 from geopy import distance as geo_distance
-# rappresentazione di default = []
 # http://mavsdk-python-docs.s3-website.eu-central-1.amazonaws.com/plugins/telemetry.html#mavsdk.telemetry.Position
 # http://mavsdk-python-docs.s3-website.eu-central-1.amazonaws.com/plugins/telemetry.html#mavsdk.telemetry.PositionBody
 # http://mavsdk-python-docs.s3-website.eu-central-1.amazonaws.com/plugins/action.html#mavsdk.action.Action.goto_location
@@ -56,10 +55,12 @@ class DronePosition:
 
         Args:
             prev_pos (DronePosition, optional): La posizione di partenza.
-                Viene utilizzata per calcolare l'angolo di yaw. Defaults to None.
+                Viene utilizzata per calcolare l'angolo di yaw.
+                Se non specificata `yaw` = 0. Defaults to None.
 
         Returns:
-            List[float]: _description_
+            List[float]: Lista di coordinate in formato
+                (lat_deg, long_deg, abs_alt_m, yaw)
         """
         if prev_pos == None:
             yaw = 0
@@ -81,7 +82,7 @@ class DronePosition:
             alt_increment_m (_type_): Incremento di altezza in metri 
 
         Returns:
-            DronePosition: La nuova posizione con i valori incrementati
+            DronePosition: La nuova DronePosition con i valori incrementati
         """
         # TODO: questo metodo non è molto accurato
         new_lat = self.latitude_deg + m_to_deg(lat_increment_m)
