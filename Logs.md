@@ -21,7 +21,7 @@
 	- Sembra che eseguire `make clean` e `make distclean` risolva il problema, il `make` richiede comunque una decida di minuti
 
 ## 14/04/23
-- Testo qgc e funziona correttamente con px4 e gazebo, è sufficiente aprire il file .AppImage installato precedentemente e far partire la simulazione. ![[Pasted image 20230414183713.png]]
+- Testo qgc e funziona correttamente con px4 e gazebo, è sufficiente aprire il file .AppImage installato precedentemente e far partire la simulazione.
 - Seguo [questa guida](https://docs.px4.io/main/en/modules/hello_sky.html) per capire come far interfacciare del codice con il drone
 	- Sembra funzionare tutto correttamente (il codice è già presente nella cartella specificata). Essendo codice molto di basso livello (almeno apparentemente), non proseguo il tutorial per concentrarmi sul python.
 - Prima di procedere credo sia opportuno installare e configurare il pacchetto `pipenv` per python che consente di gestire facilmente ambienti virtuali python. Ho creato un file per l'installazione rapida di pipenv. Dopo l'esecuzione del file è necessario uscire e rientrare.
@@ -47,7 +47,7 @@
 	- Nota: ho avuto problemi durante la nuova installazione di ubuntu. Ho risolto eseguendo i comandi `wsl --list`, individuando la versione di ubuntu precedente (che non era stata rimossa completamente) e poi eseguendo `wsl --unregister *nomeversione_ubuntu*` 
 - Seguo [questa guida](https://docs.px4.io/main/en/dev_setup/dev_env_windows_wsl.html) specifica per WSL che non avevo trovato nei tentativi precedenti:
 	- L'installazione termina senza errori
-	- La simulazione con jmavsim dà lo stesso errore del [[#12_04_23]].
+	- La simulazione con jmavsim dà lo stesso errore del 12/04/23.
 	- La simulazione con gazebo classic funziona (`make px4_sitl gazebo`)
 	- Seguo [questa guida](per installare gazebo-garden) e poi provo a eseguire `make px4_sitl gz_x500` senza successo (come ai tentativi precedenti)
 	- Provo a installare i driver con lo script `install_cuda.sh` senza risolvere nulla
@@ -57,7 +57,7 @@
 
 ## 18/04/23
 - Faccio un ultimo tentativo per risolvere il problema di gazebo (non classic) su ubuntu 22.04 seguendo il **Troubleshooting** a [questo indirizzo](https://docs.px4.io/main/en/dev_setup/building_px4.html):
-	- Eseguire `git submodule update --recursive` e `make distclean` risolve il problema di cui all'ultimo punto del [[#17/04/23]]
+	- Eseguire `git submodule update --recursive` e `make distclean` risolve il problema di cui all'ultimo punto del 17/04/23
 	- Il simulatore viene lanciato correttamente ma le performance non sono accettabili (a occhio un paio di fps)
 	- Per risolvere il problema provo a reinstallare i driver cuda tramite [questa guida](https://ubuntu.com/tutorials/enabling-gpu-acceleration-on-ubuntu-on-wsl2-with-the-nvidia-cuda-platform#3-install-nvidia-cuda-on-ubuntu) (è possibile che lo script fallisse a causa della necessità dell'input dell'utente)
 		- L'istallazione va a buon fine ma non cambia il risultato.
@@ -67,7 +67,7 @@
 	- Tutto funziona correttamente
 - Installo pipenv
 - Seguo [questa guida](https://mavsdk.mavlink.io/main/en/python/quickstart.html) utilizzando pipenv invece che pip dopo aver creato l'ambiente virtuale con `pipenv shell` 
-- Noto solo adesso che le anche con jmavsim le prestazioni sono pessime (3/4 fps) e provo a trovare una soluzione
+- Noto solo adesso che le anche con jmavsim le prestazioni sono pessime (3/4 fps) e non riesco a trovare una soluzione
 	- 
 
 ## 24/04/23
@@ -93,12 +93,11 @@
 	- Riesco a comunicare con il drone tramite la console di python
 ## 29/04/21
 - Scarico gli esempi di mavsdkpython e creo una shell pipenv all'interno della cartella così da poter provare gli script isolati
-	- (prima di procedere devo reinstallare le librerie necessarie all'iterno dell'ambiente virtuale analogamente a quanto fatto il [[#26/04/23]])
+	- (prima di procedere devo reinstallare le librerie necessarie all'iterno dell'ambiente virtuale analogamente a quanto fatto il 26/04/23)
 	- L'esempio `takeoff_and_land.py` funziona solo togliendo il parametro `system_address` alla funzione `run`
 	- Riesco a eseguire gli script senza problemi (anche senza modificare il parametro `system_address`)
 - Cerco un modo per programmare una logica sul drone, forse [questo link](https://mavsdk.mavlink.io/main/en/cpp/guide/connections.html) ha la risposta ma non è relativo a python
-	- Non capisco se il codice python che scrivo viene eseguito sul drone oppure sulla gcs
-	- [Possibile soluzione](http://mavsdk-python-docs.s3-website.eu-central-1.amazonaws.com/plugins/server_utility.html#module-mavsdk.server_utility)
+	- [Possibile soluzione](http://mavsdk-python-docs.s3-website.eu-central-1.amazonaws.com/plugins/server_utility.html#module-mavsdk.server_utility) (NOTA: non è la soluzione in realtà)
 
 ## 01/05/23
 - Cerco di far partire una simulazione con più droni seguendo [questa guida](https://docs.px4.io/main/en/simulation/multi_vehicle_jmavsim.html)
@@ -108,6 +107,7 @@
 	- Lo script `takeoff_and_land.py` non fa nulla
 	- Il problema potrebbe essere dovuto al fatto che il comando `sitl_multiple_run.sh` contiene un path incorretto (trovato tramite il file `PX4-Autopilot/Tools/build/px4_sitl_default/instance_1/err.log` di cui riporto il conetenuto) ```./Tools/simulation/sitl_multiple_run.sh: line 31: /home/giacomo/PX4-Autopilot/Tools/simulation/../build/px4_sitl_default/bin/px4: No such file or directory```
 		- Percorso `build/px4_sitl_default/bin/px4` è presente in `PX4-Autopilot/build/px4_sitl_default`, non all'interno della cartella `Tools` come specificato nel file di errore. Provo a modificare lo script per far sì che usi questo percorso cambiando la riga `src_path="$SCRIPT_DIR/.."` in `src_path="$SCRIPT_DIR/../../"` (questo errore mi sembra coerente con il fatto che la documentazione dichiara che lo script `sitl_multiple_run.sh` sia nella cartella "padre" di quella in cui non sia in realtà)
+  - **NOTA**: ho fatto una pull request che risolve il problema scritto sopra ed è stata approvata quindi il bug dovrebbe essere risolto sulle ultime versioni di PX4
 
 ## 05/05/23
 - Provo a utilizzare la [guida](https://docs.px4.io/main/en/test_and_ci/docker.html) per docker senza successo, probabilmente perché sono su ubuntu 22 e docker utilizza gazebo classic che non è più supportato come riferito [qui](https://github.com/PX4/PX4-SITL_gazebo-classic/issues/954)
